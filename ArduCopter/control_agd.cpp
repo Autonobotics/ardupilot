@@ -34,7 +34,13 @@ bool Copter::agd_check_input() {
 	int16_t mid_stick_roll = channel_roll->get_control_mid();
 	int16_t yaw_control = channel_yaw->control_in;
 	int16_t mid_stick_yaw = channel_yaw->get_control_mid();
+	int16_t agd_mode = g.rc_6->control_in;
 
+	//if channel 6 (agd_mode) returned value is above 1500 go into auto mode
+	if (agd_mode > AGD_AUTO_MODE_THRESHOLD){
+		gcs_send_text_P(SEVERITY_LOW, PSTR("AGD_AUTO_MODE"))
+		return false
+	}
 	// check rc inputs are in the deadband
 	if ((throttle_control < (mid_stick_throttle + 15)) && (throttle_control > (mid_stick_throttle - 15)) \
 		&& (pitch_control < (mid_stick_pitch + 15)) && (pitch_control > (mid_stick_pitch - 15)) \

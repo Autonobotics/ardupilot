@@ -151,6 +151,7 @@ private:
     RC_Channel *channel_pitch;
     RC_Channel *channel_throttle;
     RC_Channel *channel_yaw;
+	RC_Channel *channel_agdmode;
 
     // Dataflash
     DataFlash_Class DataFlash;
