@@ -122,6 +122,10 @@ void Copter::agd_run()
 bool Copter::agd_get_nav_info() {
 	//get navigation info from STM board
 	//pitch_con, roll_con, yaw_con, throttle_con
+	//pitch = forward and backword
+	//roll = left and right
+	//yaw = rotation
+	//throttle = up and down
 	agd_pitch_con = y_inten;
 	agd_roll_con = x_inten;
 	agd_throttle_con = z_inten;

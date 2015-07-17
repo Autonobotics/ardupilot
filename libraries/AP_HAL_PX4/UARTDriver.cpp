@@ -148,6 +148,7 @@ void PX4UARTDriver::begin(uint32_t b, uint16_t rxS, uint16_t txS)
         if (!_initialised) {
             ::printf("initialised %s OK %u %u\n", _devpath, 
                      (unsigned)_writebuf_size, (unsigned)_readbuf_size);
+
         }
         _initialised = true;
     }

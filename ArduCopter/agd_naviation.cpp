@@ -8,12 +8,17 @@ void Copter::agd_nav_init()
 	// this will be called once at start-up
 	AGD_NAV_PORT->begin(115200, 8, 8); // 115200 baud rate, 8 byte input, 8 byte output buffer
 	AGD_NAV_PORT->set_flow_control(AP_HAL::UARTDriver::FLOW_CONTROL_DISABLE);
+	AGD_NAV_PORT->set_blocking_writes(true);
 	agd_nav_state = sync;
 	//agd_started = false;
 	x_inten = idle;
 	y_inten = idle;
 	z_inten = idle;
 	rotation_abs = 0x7ffe;
+	if (AGD_NAV_PORT->is_initialized()) {
+		gcs_send_text_P(SEVERITY_LOW, PSTR("UART init success"));
+	}
+
 }
 
 // Write ARM-Pix transfer protocol messages
@@ -43,9 +48,14 @@ void Copter::nav_sync() {
 	sAPP_PIXARM_SYNC sync_msg;
 	sync_msg.cmd = PIXARM_CMD_SYNC;
 	sync_msg.flag = PIXARM_FLAG_END;
+	char temp[PIXARM_MSG_SIZE];
 	uint8_t* txbuf = (uint8_t*)(&sync_msg);
+	itoa(*txbuf, temp, 16);
+	gcs_send_text_P(SEVERITY_LOW, PSTR(temp));
 	int16_t size = AGD_NAV_PORT->write(txbuf, PIXARM_MSG_SIZE);
 	gcs_send_text_P(SEVERITY_LOW, PSTR("PIXARM_start_SYNC"));
+	itoa(size, temp, 16);
+	gcs_send_text_P(SEVERITY_LOW, PSTR(temp));
 	if (size != PIXARM_MSG_SIZE) {
 		gcs_send_text_P(SEVERITY_LOW, PSTR("PIXARM_ERROR_SYNC"));
 		//Log_Write_ARMPixT_error(PIXARM_ERROR_SYNC);
@@ -54,7 +64,6 @@ void Copter::nav_sync() {
 	else {
 		agd_nav_state = ack;
 	}
-	agd_nav_state = ack;
 }
 
 void Copter::nav_ack() {
@@ -63,9 +72,10 @@ void Copter::nav_ack() {
 	int16_t size;
 
 	size = AGD_NAV_PORT->available();   // Number of bytes available in rx buffer
-
+	gcs_send_text_P(SEVERITY_LOW, PSTR("PIXARM_start_ACK"));
 	if (size != PIXARM_MSG_SIZE) {
 		agd_nav_state = ack;
+		gcs_send_text_P(SEVERITY_LOW, PSTR("PIXARM_no_ACK"));
 	}
 	else {
 		for (int16_t i = 0; i < size; ++i) {
@@ -81,7 +91,6 @@ void Copter::nav_ack() {
 			agd_nav_state = request;
 		}
 	}
-	agd_nav_state = request;
 }
 
 void Copter::nav_req() {
@@ -100,7 +109,6 @@ void Copter::nav_req() {
 	else {
 		agd_nav_state = read_data;
 	}
-	agd_nav_state = read_data;
 }
 
 void Copter::nav_read() {
