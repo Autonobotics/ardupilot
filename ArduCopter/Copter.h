@@ -319,6 +319,25 @@ private:
     // Auto
     AutoMode auto_mode;   // controls which auto controller is run
 
+	//Agd
+	AgdMode agd_mode;
+	AgdMode agd_prev_mode;
+	AgdControl  agd_pitch_con, agd_roll_con, agd_throttle_con;
+	AgdControl  agd_pitch_con_prev, agd_roll_con_prev, agd_throttle_con_prev;
+
+	int16_t agd_yaw_con;
+	float agd_prev_roll, agd_prev_pitch;
+	float agd_prev_yaw_rate;
+	int16_t agd_prev_throttle_scaled;
+	//volatile bool agd_started = false;
+	bool agd_change_mode;
+	volatile AgdControl x_inten;
+	volatile AgdControl y_inten;
+	volatile AgdControl z_inten;
+	volatile int16_t rotation_abs;
+	uint16_t agd_pixarm_counter = 0;
+	ARMPixT_state agd_nav_state;
+
     // Guided
     GuidedMode guided_mode;  // controls which controller is run (pos or vel)
 
@@ -617,6 +636,17 @@ private:
     void userhook_MediumLoop();
     void userhook_SlowLoop();
     void userhook_SuperSlowLoop();
+
+	// AGD navigation ARMPixT functions
+	void agd_FastLoop();
+	void agd_nav_init();
+	void nav_sync();
+	void nav_ack();
+	void nav_req();
+	void nav_read();
+	void run_nav();
+
+
     void update_home_from_EKF();
     void set_home_to_current_location_inflight();
     bool set_home_to_current_location();
@@ -900,6 +930,19 @@ private:
     void gcs_send_text_fmt(const prog_char_t *fmt, ...);
     bool start_command(const AP_Mission::Mission_Command& cmd);
     bool verify_command(const AP_Mission::Mission_Command& cmd);
+
+	//agd
+	bool agd_init(bool ignore_checks);
+	bool agd_check_input();
+	bool agd_get_nav_info();
+	void agd_calc_throttle(int16_t &throttle_val);
+	void agd_calc_desired_lean_angles(float &roll_out, float &pitch_out);
+	float agd_calc_yaw_rate(int16_t yaw_angle);
+	void agd_run();
+	void agd_start_guide_run();
+	void agd_search_beacon_run();
+	void agd_nav_input_run();
+	void agd_user_input_run();
 
     bool do_guided(const AP_Mission::Mission_Command& cmd);
     void do_takeoff(const AP_Mission::Mission_Command& cmd);

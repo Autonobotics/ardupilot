@@ -85,10 +85,11 @@ enum aux_sw_func {
 #define HIL_MODE_SENSORS                1
 
 // Auto Pilot Modes enumeration
+// AGD replaces 
 enum autopilot_modes {
     STABILIZE =     0,  // manual airframe angle with manual throttle
-    ACRO =          1,  // manual body-frame angular rate with manual throttle
-    ALT_HOLD =      2,  // manual airframe angle with automatic throttle
+    AGD =           1,  // autonomously guide people using beacons (Autonomous Guide Drone) replace acro mode
+	ALT_HOLD =      2,  // manual airframe angle with automatic throttle
     AUTO =          3,  // fully automatic waypoint control using mission commands
     GUIDED =        4,  // fully automatic fly to coordinate or fly at velocity/direction using GCS immediate commands
     LOITER =        5,  // automatic horizontal acceleration with automatic throttle
@@ -101,7 +102,8 @@ enum autopilot_modes {
     FLIP =         14,  // automatically flip the vehicle on the roll axis
     AUTOTUNE =     15,  // automatically tune the vehicle's roll and pitch gains
     POSHOLD =      16,  // automatic position hold with manual override, with automatic throttle
-    BRAKE =        17   // full-brake using inertial/GPS system, no pilot input
+    BRAKE =        17,   // full-brake using inertial/GPS system, no pilot input
+	ACRO =         18  // manual body-frame angular rate with manual throttle
 };
 
 // Tuning enumeration
@@ -166,6 +168,20 @@ enum tuning_func {
 #define WP_YAW_BEHAVIOR_LOOK_AT_NEXT_WP_EXCEPT_RTL    2   // auto pilot will face next waypoint except when doing RTL at which time it will stay in it's last
 #define WP_YAW_BEHAVIOR_LOOK_AHEAD                    3   // auto pilot will look ahead during missions and rtl (primarily meant for traditional helicotpers)
 
+// AGD roll/pitch speed definitions
+#define AGD_ROLL_POS_HIGH	1750
+#define AGD_ROLL_POS_LOW	1600
+#define AGD_ROLL_NEG_HIGH	1350
+#define AGD_ROLL_NEG_LOW	1400
+#define AGD_PITCH_POS_HIGH	1750
+#define AGD_PITCH_POS_LOW	1600
+#define AGD_PITCH_NEG_HIGH	1350
+#define AGD_PITCH_NEG_LOW	1400
+#define AGD_THROTTLE_POS_HIGH	1750
+#define AGD_THROTTLE_POS_LOW	1600
+#define AGD_THROTTLE_NEG_HIGH	1350
+#define AGD_THROTTLE_NEG_LOW	1400
+
 // Auto modes
 enum AutoMode {
     Auto_TakeOff,
@@ -186,6 +202,89 @@ enum GuidedMode {
     Guided_Velocity,
     Guided_PosVel
 };
+
+
+// Agd modes
+enum AgdMode {
+	Agd_StartUp, // just a place holder for initializing agd_prev_mode
+	Agd_StartGuide,
+	Agd_SearchBeacon,
+	Agd_UserInput,
+	Agd_NavInput
+};
+
+enum AgdControl {
+	posHigh = 0,
+	negHigh,
+	posLow,
+	negLow,
+	idle,
+	startup
+};
+
+
+#define AGD_NAV_PORT hal.uartE
+#define PIXARM_CMD_READ_REQ 0x03
+#define PIXARM_CMD_READ_DATA 0x04
+#define PIXARM_FLAG_END 0xFF
+#define PIXARM_CMD_SYNC 0x01
+#define PIXARM_MSG_SIZE 8
+#define PIXARM_ERROR_SYNC 1
+#define PIXARM_ERROR_ACK 2
+#define PIXARM_ERROR_REQ 3
+#define PIXARM_ERROR_READ 4
+
+enum ARMPixT_state {
+	sync = 0,
+	ack = 1,
+	request = 2,
+	read_data = 3
+};
+
+#define LOG_ARMPixT_MSG 0xF0
+
+struct PACKED log_ARMPixT {
+	LOG_PACKET_HEADER;
+	uint8_t xVal;
+	uint8_t yVal;
+	uint8_t zVal;
+	int16_t rVal;
+};
+
+typedef struct _sAPP_PIXARM_READ_DATA
+{
+	uint8_t cmd;
+
+	AgdControl x_intensity;
+	AgdControl y_intensity;
+	AgdControl z_intensity;
+	int16_t rotation_absolute;
+
+	uint8_t padding_b;
+	uint8_t flag;
+
+} sAPP_PIXARM_READ_DATA;
+
+typedef struct _sAPP_PIXARM_READ_REQ
+{
+	uint8_t cmd;
+	uint8_t padding_a;
+
+	uint16_t rotation_absolute;
+	uint8_t flag;
+
+	uint8_t padding[3];
+
+} sAPP_PIXARM_READ_REQ;
+
+typedef struct _sAPP_PIXARM_SYNC
+{
+	uint8_t cmd;
+	uint8_t payload[6];
+	uint8_t flag;
+
+} sAPP_PIXARM_SYNC;
+
 
 // RTL states
 enum RTLState {

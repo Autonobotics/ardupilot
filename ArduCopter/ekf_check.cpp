@@ -30,14 +30,8 @@ static struct {
 // should be called at 10hz
 void Copter::ekf_check()
 {
-    // exit immediately if ekf has no origin yet - this assumes the origin can never become unset
-    Location temp_loc;
-    if (!ahrs.get_NavEKF_const().getOriginLLH(temp_loc)) {
-        return;
-    }
-
     // return immediately if motors are not armed, ekf check is disabled, not using ekf or usb is connected
-    if (!motors.armed() || ap.usb_connected || (g.fs_ekf_thresh <= 0.0f)) {
+    if (!motors.armed() || ap.usb_connected || (g.fs_ekf_thresh <= 1.0f)) {
         ekf_check_state.fail_count = 0;
         ekf_check_state.bad_variance = false;
         AP_Notify::flags.ekf_bad = ekf_check_state.bad_variance;
@@ -92,7 +86,7 @@ void Copter::ekf_check()
 bool Copter::ekf_over_threshold()
 {
     // return false immediately if disabled
-    if (g.fs_ekf_thresh <= 0.0f) {
+    if (g.fs_ekf_thresh <= 1.0f) {
         return false;
     }
 

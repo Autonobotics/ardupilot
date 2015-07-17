@@ -31,7 +31,11 @@ bool Copter::set_mode(uint8_t mode)
             #endif
             break;
 
-        case STABILIZE:
+		case AGD:
+			success = agd_init(ignore_checks);
+			break;
+       
+		case STABILIZE:
             #if FRAME_CONFIG == HELI_FRAME
                 success = heli_stabilize_init(ignore_checks);
             #else
@@ -142,6 +146,10 @@ void Copter::update_flight_mode()
                 acro_run();
             #endif
             break;
+
+		case AGD:
+			agd_run();
+			break;
 
         case STABILIZE:
             #if FRAME_CONFIG == HELI_FRAME
@@ -272,6 +280,7 @@ bool Copter::mode_has_manual_throttle(uint8_t mode) {
     switch(mode) {
         case ACRO:
         case STABILIZE:
+		case AGD:
             return true;
         default:
             return false;
@@ -319,6 +328,9 @@ void Copter::print_flight_mode(AP_HAL::BetterStream *port, uint8_t mode)
     case ACRO:
         port->print_P(PSTR("ACRO"));
         break;
+	case AGD:
+		port->print_P(PSTR("AGD"));
+		break;
     case ALT_HOLD:
         port->print_P(PSTR("ALT_HOLD"));
         break;
