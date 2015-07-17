@@ -40,7 +40,7 @@ void Copter::agd_nav_init()
 }*/
 
 void Copter::nav_sync() {
-	/*sAPP_PIXARM_SYNC sync_msg;
+	sAPP_PIXARM_SYNC sync_msg;
 	sync_msg.cmd = PIXARM_CMD_SYNC;
 	sync_msg.flag = PIXARM_FLAG_END;
 	uint8_t* txbuf = (uint8_t*)(&sync_msg);
@@ -53,12 +53,12 @@ void Copter::nav_sync() {
 	}
 	else {
 		agd_nav_state = ack;
-	}*/
+	}
 	agd_nav_state = ack;
 }
 
 void Copter::nav_ack() {
-	/*char incoming[8];
+	char incoming[8];
 	sAPP_PIXARM_SYNC* ack_msg;
 	int16_t size;
 
@@ -80,12 +80,12 @@ void Copter::nav_ack() {
 		else {
 			agd_nav_state = request;
 		}
-	}*/
+	}
 	agd_nav_state = request;
 }
 
 void Copter::nav_req() {
-	/*sAPP_PIXARM_READ_REQ req_msg;
+	sAPP_PIXARM_READ_REQ req_msg;
 	req_msg.cmd = PIXARM_CMD_READ_REQ;
 	req_msg.rotation_absolute = ahrs.yaw_sensor;
 	req_msg.flag = PIXARM_FLAG_END;
@@ -99,12 +99,12 @@ void Copter::nav_req() {
 	}
 	else {
 		agd_nav_state = read_data;
-	}*/
+	}
 	agd_nav_state = read_data;
 }
 
 void Copter::nav_read() {
-	/*static char incoming[8];
+	static char incoming[8];
 	sAPP_PIXARM_READ_DATA* data;
 	int16_t size;
 
@@ -133,11 +133,7 @@ void Copter::nav_read() {
 			//Log_Write_ARMPixT();
 
 		}
-	}*/
-	agd_nav_state = request;
-	//if ((agd_pixarm_counter % 200) == 0) {
-		//gcs_send_text_P(SEVERITY_LOW, PSTR("PIXARM_READ_SUCCESS"));
-//	}
+	}
 }
 
 

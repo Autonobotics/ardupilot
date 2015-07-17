@@ -1,6 +1,7 @@
 /// -*- tab-width: 4; Mode: C++; c-basic-offset: 4; indent-tabs-mode: nil -*-
 
 #include "Copter.h"
+#include <string>
 
 /*
 * control_agd.pde - init and run calls for agd flight mode
@@ -26,29 +27,33 @@ bool Copter::agd_init(bool ignore_checks)
 
 bool Copter::agd_check_input() {
 	bool userInput = true;
-	int16_t throttle_control = channel_throttle->control_in;
+	/*int16_t throttle_control = channel_throttle->control_in;
 	int16_t mid_stick_throttle = channel_throttle->get_control_mid();
 	int16_t pitch_control = channel_pitch->control_in;
 	int16_t mid_stick_pitch = channel_pitch->get_control_mid();
 	int16_t roll_control = channel_roll->control_in;
 	int16_t mid_stick_roll = channel_roll->get_control_mid();
 	int16_t yaw_control = channel_yaw->control_in;
-	int16_t mid_stick_yaw = channel_yaw->get_control_mid();
-	int16_t agd_mode = g.rc_6->control_in;
+	int16_t mid_stick_yaw = channel_yaw->get_control_mid();*/
+	int16_t agd_input_mode = g.rc_6.control_in;
+	//char rc6_value[8];
+
+
+	//gcs_send_text_P(SEVERITY_LOW, PSTR(itoa(agd_input_mode,rc6_value,10)));
 
 	//if channel 6 (agd_mode) returned value is above 1500 go into auto mode
-	if (agd_mode > AGD_AUTO_MODE_THRESHOLD){
-		gcs_send_text_P(SEVERITY_LOW, PSTR("AGD_AUTO_MODE"))
-		return false
+	if (agd_input_mode > AGD_AUTO_MODE_THRESHOLD){
+		//gcs_send_text_P(SEVERITY_LOW, PSTR("AGD_AUTO_MODE"));
+		userInput = false;
 	}
 	// check rc inputs are in the deadband
-	if ((throttle_control < (mid_stick_throttle + 15)) && (throttle_control > (mid_stick_throttle - 15)) \
+	/*if ((throttle_control < (mid_stick_throttle + 15)) && (throttle_control > (mid_stick_throttle - 15)) \
 		&& (pitch_control < (mid_stick_pitch + 15)) && (pitch_control > (mid_stick_pitch - 15)) \
 		&& (roll_control < (mid_stick_roll + 15)) && (roll_control > (mid_stick_roll - 15)) \
 		&& (yaw_control < (mid_stick_yaw + 15)) && (yaw_control > (mid_stick_yaw - 15))) {
 		
 		userInput = false;
-	}
+	}*/
 	return userInput;
 }
 

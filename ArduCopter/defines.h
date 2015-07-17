@@ -224,7 +224,7 @@ enum AgdControl {
 
 
 #define AGD_NAV_PORT hal.uartE
-#define AGD_AUTO_MODE_THRESHOLD 1500
+#define AGD_AUTO_MODE_THRESHOLD 500
 #define PIXARM_CMD_READ_REQ 0x03
 #define PIXARM_CMD_READ_DATA 0x04
 #define PIXARM_FLAG_END 0xFF
