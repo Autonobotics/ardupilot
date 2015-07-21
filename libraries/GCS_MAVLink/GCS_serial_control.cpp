@@ -49,16 +49,16 @@ void GCS_MAVLINK::handle_serial_control(mavlink_message_t *msg, AP_GPS &gps)
         lock_channel(MAVLINK_COMM_1, exclusive);
         break;
     case SERIAL_CONTROL_DEV_TELEM2:
-        stream = port = hal.uartD;
-        lock_channel(MAVLINK_COMM_2, exclusive);
+        //stream = port = hal.uartD;
+        //lock_channel(MAVLINK_COMM_2, exclusive);
         break;
     case SERIAL_CONTROL_DEV_GPS1:
         stream = port = hal.uartB;
         gps.lock_port(0, exclusive);
         break;
     case SERIAL_CONTROL_DEV_GPS2:
-        stream = port = hal.uartE;
-        gps.lock_port(1, exclusive);
+        //stream = port = hal.uartE;
+        //gps.lock_port(1, exclusive);
         break;
     case SERIAL_CONTROL_DEV_SHELL:
         stream = hal.util->get_shell_stream();

@@ -169,18 +169,18 @@ enum tuning_func {
 #define WP_YAW_BEHAVIOR_LOOK_AHEAD                    3   // auto pilot will look ahead during missions and rtl (primarily meant for traditional helicotpers)
 
 // AGD roll/pitch speed definitions
-#define AGD_ROLL_POS_HIGH	1750
-#define AGD_ROLL_POS_LOW	1600
-#define AGD_ROLL_NEG_HIGH	1350
-#define AGD_ROLL_NEG_LOW	1400
-#define AGD_PITCH_POS_HIGH	1750
-#define AGD_PITCH_POS_LOW	1600
-#define AGD_PITCH_NEG_HIGH	1350
-#define AGD_PITCH_NEG_LOW	1400
-#define AGD_THROTTLE_POS_HIGH	1750
-#define AGD_THROTTLE_POS_LOW	1600
-#define AGD_THROTTLE_NEG_HIGH	1350
-#define AGD_THROTTLE_NEG_LOW	1400
+#define AGD_ROLL_POS_HIGH	50
+#define AGD_ROLL_POS_LOW	20
+#define AGD_ROLL_NEG_HIGH	-50
+#define AGD_ROLL_NEG_LOW	-20
+#define AGD_PITCH_POS_HIGH	50
+#define AGD_PITCH_POS_LOW	20
+#define AGD_PITCH_NEG_HIGH	-50
+#define AGD_PITCH_NEG_LOW	-20
+#define AGD_THROTTLE_POS_HIGH	5
+#define AGD_THROTTLE_POS_LOW	2
+#define AGD_THROTTLE_NEG_HIGH	-5
+#define AGD_THROTTLE_NEG_LOW	-2
 
 // Auto modes
 enum AutoMode {
@@ -272,9 +272,9 @@ typedef struct _sAPP_PIXARM_READ_REQ
 	uint8_t padding_a;
 
 	uint16_t rotation_absolute;
-	uint8_t flag;
 
 	uint8_t padding[3];
+    uint8_t flag;
 
 } sAPP_PIXARM_READ_REQ;
 

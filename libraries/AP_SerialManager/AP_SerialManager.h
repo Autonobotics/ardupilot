@@ -66,6 +66,10 @@
 #define AP_SERIALMANAGER_SToRM32_BUFSIZE_RX     128
 #define AP_SERIALMANAGER_SToRM32_BUFSIZE_TX     128
 
+#define AP_SERIALMANAGER_PIXARM_BAUD            115200
+#define AP_SERIALMANAGER_PIXARM_BUFSIZE_RX         8
+#define AP_SERIALMANAGER_PIXARM_BUFSIZE_TX         8
+
 
 class AP_SerialManager {
 
@@ -81,6 +85,7 @@ public:
         SerialProtocol_GPS2 = 6,        // do not use - use GPS and provide instance of 1
         SerialProtocol_AlexMos = 7,
         SerialProtocol_SToRM32 = 8,
+        SerialProtocol_PIXARM = 9,
     };
 
     // Constructor

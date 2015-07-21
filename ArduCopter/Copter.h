@@ -329,7 +329,7 @@ private:
 	int16_t agd_yaw_con;
 	float agd_prev_roll, agd_prev_pitch;
 	float agd_prev_yaw_rate;
-	int16_t agd_prev_throttle_scaled;
+	int16_t agd_prev_throttle;
 	//volatile bool agd_started = false;
 	bool agd_change_mode;
 	volatile AgdControl x_inten;

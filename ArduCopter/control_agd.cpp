@@ -27,34 +27,14 @@ bool Copter::agd_init(bool ignore_checks)
 
 bool Copter::agd_check_input() {
 	bool userInput = true;
-	/*int16_t throttle_control = channel_throttle->control_in;
-	int16_t mid_stick_throttle = channel_throttle->get_control_mid();
-	int16_t pitch_control = channel_pitch->control_in;
-	int16_t mid_stick_pitch = channel_pitch->get_control_mid();
-	int16_t roll_control = channel_roll->control_in;
-	int16_t mid_stick_roll = channel_roll->get_control_mid();
-	int16_t yaw_control = channel_yaw->control_in;
-	int16_t mid_stick_yaw = channel_yaw->get_control_mid();*/
 	int16_t agd_input_mode = g.rc_6.control_in;
-	//char rc6_value[8];
 
-
-	//gcs_send_text_P(SEVERITY_LOW, PSTR(itoa(agd_input_mode,rc6_value,10)));
-
-	//if channel 6 (agd_mode) returned value is above 1500 go into auto mode
+    //if channel 6 (agd_mode) returned value is above 1500 go into auto mode
 	if (agd_input_mode > AGD_AUTO_MODE_THRESHOLD){
-		//gcs_send_text_P(SEVERITY_LOW, PSTR("AGD_AUTO_MODE"));
 		userInput = false;
 	}
-	// check rc inputs are in the deadband
-	/*if ((throttle_control < (mid_stick_throttle + 15)) && (throttle_control > (mid_stick_throttle - 15)) \
-		&& (pitch_control < (mid_stick_pitch + 15)) && (pitch_control > (mid_stick_pitch - 15)) \
-		&& (roll_control < (mid_stick_roll + 15)) && (roll_control > (mid_stick_roll - 15)) \
-		&& (yaw_control < (mid_stick_yaw + 15)) && (yaw_control > (mid_stick_yaw - 15))) {
-		
-		userInput = false;
-	}*/
-	return userInput;
+
+    return userInput;
 }
 
 // agd_run - runs the main agd controller
@@ -144,36 +124,36 @@ void Copter::agd_calc_throttle(int16_t &throttle_val) {
 	case startup:
 		break;
 	case posHigh:
-		throttle_val = AGD_THROTTLE_POS_HIGH;
-		if (agd_throttle_con == agd_throttle_con_prev) {
+        throttle_val = agd_prev_throttle + AGD_THROTTLE_POS_HIGH;
+		if (agd_throttle_con != agd_throttle_con_prev) {
 			gcs_send_text_P(SEVERITY_LOW, PSTR("TH_POS_HIGH"));
 			agd_throttle_con_prev = agd_throttle_con;
 		}
 		break;
 	case negHigh:
-		throttle_val = AGD_THROTTLE_NEG_HIGH;
-		if (agd_throttle_con == agd_throttle_con_prev) {
+        throttle_val = agd_prev_throttle + AGD_THROTTLE_NEG_HIGH;
+		if (agd_throttle_con != agd_throttle_con_prev) {
 			gcs_send_text_P(SEVERITY_LOW, PSTR("TH_NEG_HIGH"));
 			agd_throttle_con_prev = agd_throttle_con;
 		}
 		break;
 	case posLow:
-		throttle_val = AGD_THROTTLE_POS_LOW;
-		if (agd_throttle_con == agd_throttle_con_prev) {
+        throttle_val = agd_prev_throttle + AGD_THROTTLE_POS_LOW;
+		if (agd_throttle_con != agd_throttle_con_prev) {
 			gcs_send_text_P(SEVERITY_LOW, PSTR("TH_POS_LOW"));
 			agd_throttle_con_prev = agd_throttle_con;
 		}
 		break;
 	case negLow:
-		throttle_val = AGD_THROTTLE_NEG_LOW;
-		if (agd_throttle_con == agd_throttle_con_prev) {
+        throttle_val = agd_prev_throttle + AGD_THROTTLE_NEG_LOW;
+		if (agd_throttle_con != agd_throttle_con_prev) {
 			gcs_send_text_P(SEVERITY_LOW, PSTR("TH_NEG_LOW"));
 			agd_throttle_con_prev = agd_throttle_con;
 		}
 		break;
 	case idle:
-		throttle_val = channel_throttle->get_control_mid();
-		if (agd_throttle_con == agd_throttle_con_prev) {
+        throttle_val = agd_prev_throttle;
+		if (agd_throttle_con != agd_throttle_con_prev) {
 			gcs_send_text_P(SEVERITY_LOW, PSTR("TH_idle"));
 			agd_throttle_con_prev = agd_throttle_con;
 		}
@@ -194,36 +174,36 @@ void Copter::agd_calc_desired_lean_angles(float &roll_out, float &pitch_out)
 	case startup:
 		break;
 	case posHigh:
-		roll_val = AGD_ROLL_POS_HIGH;
-		if (agd_roll_con_prev == agd_roll_con) {
+        roll_val = channel_roll->get_control_mid() + AGD_ROLL_POS_HIGH;
+		if (agd_roll_con_prev != agd_roll_con) {
 			agd_roll_con_prev = agd_roll_con;
 			gcs_send_text_P(SEVERITY_LOW, PSTR("RL_POS_HIGH"));
 		}
 		break;
 	case negHigh:
-		roll_val = AGD_ROLL_NEG_HIGH;
-		if (agd_roll_con_prev == agd_roll_con) {
+        roll_val = channel_roll->get_control_mid() + AGD_ROLL_NEG_HIGH;
+		if (agd_roll_con_prev != agd_roll_con) {
 			agd_roll_con_prev = agd_roll_con;
 			gcs_send_text_P(SEVERITY_LOW, PSTR("RL_NEG_HIGH"));
 		}
 		break;
 	case posLow:
-		roll_val = AGD_ROLL_POS_LOW;
-		if (agd_roll_con_prev == agd_roll_con) {
+        roll_val = channel_roll->get_control_mid() + AGD_ROLL_POS_LOW;
+		if (agd_roll_con_prev != agd_roll_con) {
 			agd_roll_con_prev = agd_roll_con;
 			gcs_send_text_P(SEVERITY_LOW, PSTR("RL_POS_LOW"));
 		}
 		break;
 	case negLow:
-		roll_val = AGD_ROLL_NEG_LOW;
-		if (agd_roll_con_prev == agd_roll_con) {
+        roll_val = channel_roll->get_control_mid() + AGD_ROLL_NEG_LOW;
+		if (agd_roll_con_prev != agd_roll_con) {
 			agd_roll_con_prev = agd_roll_con;
 			gcs_send_text_P(SEVERITY_LOW, PSTR("RL_NEG_LOW"));
 		}
 		break;
 	case idle:
 		roll_val = channel_roll->get_control_mid();
-		if (agd_roll_con_prev == agd_roll_con) {
+		if (agd_roll_con_prev != agd_roll_con) {
 			agd_roll_con_prev = agd_roll_con;
 			gcs_send_text_P(SEVERITY_LOW, PSTR("RL_idle"));
 		}
@@ -234,36 +214,36 @@ void Copter::agd_calc_desired_lean_angles(float &roll_out, float &pitch_out)
 	case startup:
 		break;
 	case posHigh:
-		pitch_val = AGD_PITCH_POS_HIGH;
-		if (agd_pitch_con_prev == agd_pitch_con) {
+        pitch_val = channel_pitch->get_control_mid() + AGD_PITCH_POS_HIGH;
+		if (agd_pitch_con_prev != agd_pitch_con) {
 			agd_pitch_con_prev = agd_pitch_con;
 			gcs_send_text_P(SEVERITY_LOW, PSTR("PT_POS_HIGH"));
 		}
 		break;
 	case negHigh:
-		pitch_val = AGD_PITCH_NEG_HIGH;
-		if (agd_pitch_con_prev == agd_pitch_con) {
+        pitch_val = channel_pitch->get_control_mid() + AGD_PITCH_NEG_HIGH;
+		if (agd_pitch_con_prev != agd_pitch_con) {
 			agd_pitch_con_prev = agd_pitch_con;
 			gcs_send_text_P(SEVERITY_LOW, PSTR("PT_NEG_HIGH"));
 		}
 		break;
 	case posLow:
-		pitch_val = AGD_PITCH_POS_LOW;
-		if (agd_pitch_con_prev == agd_pitch_con) {
+        pitch_val = channel_pitch->get_control_mid() + AGD_PITCH_POS_LOW;
+		if (agd_pitch_con_prev != agd_pitch_con) {
 			agd_pitch_con_prev = agd_pitch_con;
 			gcs_send_text_P(SEVERITY_LOW, PSTR("PT_POS_LOW"));
 		}
 		break;
 	case negLow:
-		pitch_val = AGD_PITCH_NEG_LOW;
-		if (agd_pitch_con_prev == agd_pitch_con) {
+        pitch_val = channel_pitch->get_control_mid() + AGD_PITCH_NEG_LOW;
+		if (agd_pitch_con_prev != agd_pitch_con) {
 			agd_pitch_con_prev = agd_pitch_con;
 			gcs_send_text_P(SEVERITY_LOW, PSTR("PT_NEG_LOW"));
 		}
 		break;
 	case idle:
 		pitch_val = channel_pitch->get_control_mid();
-		if (agd_pitch_con_prev == agd_pitch_con) {
+		if (agd_pitch_con_prev != agd_pitch_con) {
 			agd_pitch_con_prev = agd_pitch_con;
 			gcs_send_text_P(SEVERITY_LOW, PSTR("PT_idle"));
 		}
@@ -371,7 +351,7 @@ void Copter::agd_nav_input_run()
 	agd_prev_roll = target_roll;
 	agd_prev_pitch = target_pitch;
 	agd_prev_yaw_rate = target_yaw_rate;
-	agd_prev_throttle_scaled = pilot_throttle_scaled;
+    agd_prev_throttle = throttle_control;
 
 	// body-frame rate controller is run directly from 100hz loop
 	// output pilot's throttle
@@ -396,8 +376,11 @@ void Copter::agd_user_input_run()
 	// To-Do: convert get_pilot_desired_lean_angles to return angles as floats
 	get_pilot_desired_lean_angles(channel_roll->control_in, channel_pitch->control_in, target_roll, target_pitch);
 	
+    char temp[8];
 	// get pilot's desired yaw rate
 	target_yaw_rate = get_pilot_desired_yaw_rate(channel_yaw->control_in);
+    //itoa(ahrs.yaw_sensor, temp, 10);
+    //gcs_send_text_P(SEVERITY_LOW, PSTR(temp));
 
 	// get pilot's desired throttle
 	pilot_throttle_scaled = get_pilot_desired_throttle(channel_throttle->control_in);
@@ -408,5 +391,10 @@ void Copter::agd_user_input_run()
 	// body-frame rate controller is run directly from 100hz loop
 	// output pilot's throttle
 	attitude_control.set_throttle_out(pilot_throttle_scaled, true, g.throttle_filt);
+
+    agd_prev_roll = channel_roll->control_in;
+    agd_prev_pitch = channel_pitch->control_in;
+    agd_prev_yaw_rate = target_yaw_rate;
+    agd_prev_throttle = channel_yaw->control_in;
 }
 

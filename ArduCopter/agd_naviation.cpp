@@ -6,7 +6,7 @@ void Copter::agd_nav_init()
 {
 	// put your initialisation code here
 	// this will be called once at start-up
-	AGD_NAV_PORT->begin(115200, 8, 8); // 115200 baud rate, 8 byte input, 8 byte output buffer
+	AGD_NAV_PORT->begin(115200, 8, 8); // 57600 baud rate, 8 byte input, 8 byte output buffer
 	AGD_NAV_PORT->set_flow_control(AP_HAL::UARTDriver::FLOW_CONTROL_DISABLE);
 	AGD_NAV_PORT->set_blocking_writes(true);
 	agd_nav_state = sync;
@@ -18,6 +18,20 @@ void Copter::agd_nav_init()
 	if (AGD_NAV_PORT->is_initialized()) {
 		gcs_send_text_P(SEVERITY_LOW, PSTR("UART init success"));
 	}
+
+	int16_t incoming[PIXARM_MSG_SIZE];
+	int16_t size;
+	char temp[PIXARM_MSG_SIZE];
+
+	size = AGD_NAV_PORT->available();   // Number of bytes available in rx buffer
+	for (int16_t i = 0; i < size; ++i) {
+		incoming[i] = AGD_NAV_PORT->read();
+	}
+	for (int16_t i = 0; i < size; ++i) {
+		itoa(incoming[i], temp, 16);
+		gcs_send_text_P(SEVERITY_LOW, PSTR(temp));
+	}
+
 
 }
 
@@ -48,14 +62,14 @@ void Copter::nav_sync() {
 	sAPP_PIXARM_SYNC sync_msg;
 	sync_msg.cmd = PIXARM_CMD_SYNC;
 	sync_msg.flag = PIXARM_FLAG_END;
-	char temp[PIXARM_MSG_SIZE];
+	//char temp[PIXARM_MSG_SIZE];
 	uint8_t* txbuf = (uint8_t*)(&sync_msg);
-	itoa(*txbuf, temp, 16);
-	gcs_send_text_P(SEVERITY_LOW, PSTR(temp));
+	//itoa(*txbuf, temp, 16);
+	//gcs_send_text_P(SEVERITY_LOW, PSTR(temp));
 	int16_t size = AGD_NAV_PORT->write(txbuf, PIXARM_MSG_SIZE);
 	gcs_send_text_P(SEVERITY_LOW, PSTR("PIXARM_start_SYNC"));
-	itoa(size, temp, 16);
-	gcs_send_text_P(SEVERITY_LOW, PSTR(temp));
+	//itoa(size, temp, 16);
+	//gcs_send_text_P(SEVERITY_LOW, PSTR(temp));
 	if (size != PIXARM_MSG_SIZE) {
 		gcs_send_text_P(SEVERITY_LOW, PSTR("PIXARM_ERROR_SYNC"));
 		//Log_Write_ARMPixT_error(PIXARM_ERROR_SYNC);
@@ -67,15 +81,30 @@ void Copter::nav_sync() {
 }
 
 void Copter::nav_ack() {
-	char incoming[8];
+	int16_t incoming[PIXARM_MSG_SIZE];
 	sAPP_PIXARM_SYNC* ack_msg;
 	int16_t size;
+	char temp[PIXARM_MSG_SIZE];
 
 	size = AGD_NAV_PORT->available();   // Number of bytes available in rx buffer
-	gcs_send_text_P(SEVERITY_LOW, PSTR("PIXARM_start_ACK"));
+
+	/*if (size != 0) {
+		for (int16_t i = 0; i < size; ++i) {
+			incoming[i] = AGD_NAV_PORT->read();
+		}
+		gcs_send_text_P(SEVERITY_LOW, PSTR("ack msg"));
+		for (int16_t i = 0; i < size; ++i) {
+			itoa(incoming[i], temp, 16);
+			gcs_send_text_P(SEVERITY_LOW, PSTR(temp));
+		}
+		gcs_send_text_P(SEVERITY_LOW, PSTR("ack size"));
+		itoa(size, temp, 16);
+		gcs_send_text_P(SEVERITY_LOW, PSTR(temp));
+	}*/
+	
 	if (size != PIXARM_MSG_SIZE) {
 		agd_nav_state = ack;
-		gcs_send_text_P(SEVERITY_LOW, PSTR("PIXARM_no_ACK"));
+		//gcs_send_text_P(SEVERITY_LOW, PSTR("PIXARM_no_ACK"));
 	}
 	else {
 		for (int16_t i = 0; i < size; ++i) {
@@ -112,7 +141,7 @@ void Copter::nav_req() {
 }
 
 void Copter::nav_read() {
-	static char incoming[8];
+	char incoming[8];
 	sAPP_PIXARM_READ_DATA* data;
 	int16_t size;
 
@@ -147,22 +176,6 @@ void Copter::nav_read() {
 
 void Copter::run_nav()
 {
-	agd_pixarm_counter++;
-	//if ((agd_pixarm_counter%600) <= 200) {
-	//	x_inten = posLow;
-	//	y_inten = posLow;
-	//	z_inten = posLow;
-	//	rotation_abs = 100;
-		//if ((agd_pixarm_counter % 600) == 1) {
-			//gcs_send_text_P(SEVERITY_LOW, PSTR("PIXARM_change"));
-		//}
-	//}
-	//else {
-	//	x_inten = idle;
-	//	y_inten = idle;
-	//	z_inten = idle;
-	//	rotation_abs = 0x7ffe;
-	//}
 	switch (agd_nav_state) {
 	case sync:
 		nav_sync();
