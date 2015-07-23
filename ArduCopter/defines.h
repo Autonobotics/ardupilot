@@ -244,14 +244,6 @@ enum ARMPixT_state {
 
 #define LOG_ARMPixT_MSG 0xF0
 
-struct PACKED log_ARMPixT {
-	LOG_PACKET_HEADER;
-	uint8_t xVal;
-	uint8_t yVal;
-	uint8_t zVal;
-	int16_t rVal;
-};
-
 typedef struct _sAPP_PIXARM_READ_DATA
 {
 	uint8_t cmd;
@@ -272,8 +264,8 @@ typedef struct _sAPP_PIXARM_READ_REQ
 	uint8_t padding_a;
 
 	uint16_t rotation_absolute;
-
-	uint8_t padding[3];
+    int16_t zVel;
+	uint8_t padding[1];
     uint8_t flag;
 
 } sAPP_PIXARM_READ_REQ;
@@ -350,6 +342,8 @@ enum FlipState {
 #define LOG_MOTBATT_MSG                 0x1E
 #define LOG_PARAMTUNE_MSG               0x1F
 #define LOG_HELI_MSG                    0x20
+#define LOG_PIXARM_MSG                  0x21
+#define LOG_PIXARM_ERROR_MSG            0x22
 
 #define MASK_LOG_ATTITUDE_FAST          (1<<0)
 #define MASK_LOG_ATTITUDE_MED           (1<<1)

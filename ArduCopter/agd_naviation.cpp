@@ -6,7 +6,7 @@ void Copter::agd_nav_init()
 {
 	// put your initialisation code here
 	// this will be called once at start-up
-	AGD_NAV_PORT->begin(115200, 8, 8); // 57600 baud rate, 8 byte input, 8 byte output buffer
+	AGD_NAV_PORT->begin(9600, 8, 8); // 57600 baud rate, 8 byte input, 8 byte output buffer
 	AGD_NAV_PORT->set_flow_control(AP_HAL::UARTDriver::FLOW_CONTROL_DISABLE);
 	AGD_NAV_PORT->set_blocking_writes(true);
 	agd_nav_state = sync;
@@ -126,6 +126,7 @@ void Copter::nav_req() {
 	sAPP_PIXARM_READ_REQ req_msg;
 	req_msg.cmd = PIXARM_CMD_READ_REQ;
 	req_msg.rotation_absolute = ahrs.yaw_sensor;
+    req_msg.zVel = inertial_nav.get_velocity().z;
 	req_msg.flag = PIXARM_FLAG_END;
 	uint8_t* txbuf = (uint8_t*)(&req_msg);
 
@@ -146,7 +147,7 @@ void Copter::nav_read() {
 	int16_t size;
 
 	size = AGD_NAV_PORT->available();   // Number of bytes available in rx buffer
-
+    //gcs_send_text_P(SEVERITY_LOW, PSTR("PIXARM_READ"));
 	if (size != PIXARM_MSG_SIZE) {
 		agd_nav_state = read_data;
 	}
@@ -162,11 +163,13 @@ void Copter::nav_read() {
 		}
 		else {
 			agd_nav_state = request;
+            if ((x_inten != data->x_intensity) || (y_inten != data->y_intensity) || (z_inten != data->z_intensity) || (rotation_abs != data->rotation_absolute)) {
+                gcs_send_text_P(SEVERITY_LOW, PSTR("PIXARM_READ_SUCCESS"));
+            }
 			x_inten = data->x_intensity;
 			y_inten = data->y_intensity;
 			z_inten = data->z_intensity;
 			rotation_abs = data->rotation_absolute;
-			gcs_send_text_P(SEVERITY_LOW, PSTR("PIXARM_READ_SUCCESS"));
 			//Log_Write_ARMPixT();
 
 		}

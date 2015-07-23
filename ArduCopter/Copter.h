@@ -625,6 +625,8 @@ private:
     void Log_Write_Parameter_Tuning(uint8_t param, float tuning_val, int16_t control_in, int16_t tune_low, int16_t tune_high);
     void Log_Write_Home_And_Origin();
     void Log_Sensor_Health();
+    void Log_Write_ARMPixT();
+    void Log_Write_ARMPixT_error(uint8_t error);
 #if FRAME_CONFIG == HELI_FRAME
     void Log_Write_Heli(void);
 #endif

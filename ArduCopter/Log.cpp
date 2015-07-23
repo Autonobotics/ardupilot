@@ -611,6 +611,45 @@ struct PACKED log_ParameterTuning {
     int16_t  tuning_high;   // tuning high end value
 };
 
+struct PACKED log_ARMPixT_error {
+    LOG_PACKET_HEADER;
+    uint8_t xVal;
+    uint8_t yVal;
+    uint8_t zVal;
+    int16_t rVal;
+};
+
+struct PACKED log_ARMPixT {
+    LOG_PACKET_HEADER;
+    uint8_t xVal;
+    uint8_t yVal;
+    uint8_t zVal;
+    int16_t rVal;
+};
+
+// Write ARM-Pix transfer protocol messages
+void Copter::Log_Write_ARMPixT() {
+    struct log_ARMPixT pkt = {
+        LOG_PACKET_HEADER_INIT(LOG_PIXARM_MSG),
+        xVal    : x_inten,
+        yVal    : y_inten,
+        zVal    : z_inten,
+        rVal    : rotation_abs
+    };
+    DataFlash.WriteBlock(&pkt, sizeof(pkt));
+}
+
+void Copter::Log_Write_ARMPixT_error(uint8_t error) {
+    struct log_ARMPixT_error pkt = {
+        LOG_PACKET_HEADER_INIT(LOG_PIXARM_ERROR_MSG),
+        xVal    : error,
+        yVal    : error,
+        zVal    : error,
+        rVal    : rotation_abs
+    };
+    DataFlash.WriteBlock(&pkt, sizeof(pkt));
+}
+
 void Copter::Log_Write_Parameter_Tuning(uint8_t param, float tuning_val, int16_t control_in, int16_t tune_low, int16_t tune_high)
 {
     struct log_ParameterTuning pkt_tune = {
@@ -718,6 +757,10 @@ const struct LogStructure Copter::log_structure[] PROGMEM = {
       "ERR",   "QBB",         "TimeUS,Subsys,ECode" },
     { LOG_HELI_MSG, sizeof(log_Heli),
       "HELI",  "Qhh",         "TimeUS,DRRPM,ERRPM" },
+    { LOG_PIXARM_MSG, sizeof(log_ARMPixT),
+      "APX", "ffff", "xVal,yVal,zVal,rVal" },
+    { LOG_PIXARM_ERROR_MSG, sizeof(log_ARMPixT_error),
+      "APE", "ffff", "xVal,yVal,zVal,rVal" },
 };
 
 #if CLI_ENABLED == ENABLED
