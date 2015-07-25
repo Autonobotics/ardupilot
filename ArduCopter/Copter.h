@@ -325,6 +325,8 @@ private:
 	AgdMode agd_prev_mode;
 	AgdControl  agd_pitch_con, agd_roll_con, agd_throttle_con;
 	AgdControl  agd_pitch_con_prev, agd_roll_con_prev, agd_throttle_con_prev;
+    AltHoldModeState agd_althold_state;
+    AltHoldModeState agd_althold_prev_state;
 
 	int16_t agd_yaw_con;
 	float agd_prev_roll, agd_prev_pitch;
@@ -334,9 +336,9 @@ private:
 	bool agd_change_mode;
 	volatile AgdControl x_inten;
 	volatile AgdControl y_inten;
-	volatile AgdControl z_inten;
+	volatile uint8_t alti;
 	volatile int16_t rotation_abs;
-	uint16_t agd_pixarm_counter = 0;
+	uint16_t agd_pixarm_counter;
 	ARMPixT_state agd_nav_state;
 
     // Guided
@@ -935,11 +937,13 @@ private:
     bool verify_command(const AP_Mission::Mission_Command& cmd);
 
 	//agd
+    void agd_init_param();
 	bool agd_init(bool ignore_checks);
 	bool agd_check_input();
 	bool agd_get_nav_info();
 	void agd_calc_throttle(int16_t &throttle_val);
 	void agd_calc_desired_lean_angles(float &roll_out, float &pitch_out);
+    float get_agd_climb_rate(int16_t target_rate, float current_alt_target, float dt);
 	float agd_calc_yaw_rate(int16_t yaw_angle);
 	void agd_run();
 	void agd_start_guide_run();

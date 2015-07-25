@@ -10,22 +10,29 @@
 // agd_init - initialise agd controller
 bool Copter::agd_init(bool ignore_checks)
 {
-	// set target altitude to zero for reporting
-	pos_control.set_alt_target(0);
-	agd_mode = Agd_StartGuide;
-	agd_prev_mode = Agd_StartUp;
-	agd_pitch_con_prev = startup;
-	agd_roll_con_prev = startup;
-	agd_throttle_con_prev = startup;
+    agd_init_param();
+	//agd_started = true;
+	gcs_send_text_P(SEVERITY_LOW, PSTR("<AGD>AGD INIT<AGD>"));
+	// stabilize should never be made to fail
+	agd_nav_init();
+
+
+	return true;
+}
+
+void Copter::agd_init_param() {
+    // set target altitude to zero for reporting
+    agd_pixarm_counter = 0;
+    pos_control.set_alt_target(0);
+    agd_mode = Agd_StartGuide;
+    agd_prev_mode = Agd_StartUp;
+    agd_pitch_con_prev = startup;
+    agd_roll_con_prev = startup;
+    agd_throttle_con_prev = startup;
     agd_prev_throttle = 0;
     agd_prev_roll = 0;
     agd_prev_pitch = 0;
     agd_prev_yaw_rate = 0;
-	//agd_started = true;
-	gcs_send_text_P(SEVERITY_LOW, PSTR("AGD INIT"));
-	// stabilize should never be made to fail
-	agd_nav_init();
-
     // initialize vertical speeds and leash lengths
     pos_control.set_speed_z(-g.pilot_velocity_z_max, g.pilot_velocity_z_max);
     pos_control.set_accel_z(g.pilot_accel_z);
@@ -35,8 +42,8 @@ bool Copter::agd_init(bool ignore_checks)
 
     // stop takeoff if running
     takeoff_stop();
-
-	return true;
+    // set maximum altitude to 1.5m
+    pos_control.set_alt_max(150);
 }
 
 bool Copter::agd_check_input() {
@@ -59,6 +66,9 @@ void Copter::agd_run()
     if (!motors.armed()) {
         attitude_control.set_throttle_out_unstabilized(0, true, g.throttle_filt);
         pos_control.relax_alt_hold_controllers(get_throttle_pre_takeoff(channel_throttle->control_in) - throttle_average);
+        agd_init_param();
+        agd_althold_state = AltHold_Landed;
+        agd_althold_prev_state = AltHold_Landed;
         return;
     }
     agd_pixarm_counter++;
@@ -88,7 +98,7 @@ void Copter::agd_run()
 	case Agd_StartUp: // just a placeholder for agd_prev_mode initialization agd_mode should not set to this value.
 	case Agd_StartGuide:
 		if (agd_change_mode) {
-			gcs_send_text_P(SEVERITY_LOW, PSTR("Change mode: AGD START"));
+            gcs_send_text_P(SEVERITY_MEDIUM, PSTR("<AGD>Change mode: AGD START<AGD>"));
 		}
 		agd_start_guide_run();
 		agd_prev_mode = Agd_StartGuide;
@@ -96,7 +106,7 @@ void Copter::agd_run()
 
 	case Agd_SearchBeacon:
 		if (agd_change_mode) {
-			gcs_send_text_P(SEVERITY_LOW, PSTR("Change mode: SEARCH BEACON"));
+            gcs_send_text_P(SEVERITY_MEDIUM, PSTR("<AGD>Change mode: SEARCH BEACON<AGD>"));
 		}
 		agd_search_beacon_run();
 		agd_prev_mode = Agd_SearchBeacon;
@@ -104,7 +114,7 @@ void Copter::agd_run()
 
 	case Agd_NavInput:
 		if (agd_change_mode) {
-			gcs_send_text_P(SEVERITY_LOW, PSTR("Change mode: NAV INPUT"));
+            gcs_send_text_P(SEVERITY_MEDIUM, PSTR("<AGD>Change mode: NAV INPUT<AGD>"));
 		}
 		agd_nav_input_run();
 		agd_prev_mode = Agd_NavInput;
@@ -112,7 +122,7 @@ void Copter::agd_run()
 
 	case Agd_UserInput:
 		if (agd_change_mode) {
-			gcs_send_text_P(SEVERITY_LOW, PSTR("Change mode: USER INPUT"));
+            gcs_send_text_P(SEVERITY_MEDIUM, PSTR("<AGD>Change mode: USER INPUT<AGD>"));
 		}
 		agd_user_input_run();
 		agd_prev_mode = Agd_UserInput;
@@ -131,12 +141,12 @@ bool Copter::agd_get_nav_info() {
 	//throttle = up and down
 	agd_pitch_con = y_inten;
 	agd_roll_con = x_inten;
-	agd_throttle_con = z_inten;
+	//agd_throttle_con = z_inten;
 	agd_yaw_con = rotation_abs;
 
 	if (agd_yaw_con == 0x7ffe) {
         if (agd_mode != Agd_SearchBeacon) {
-            gcs_send_text_P(SEVERITY_LOW, PSTR("STM sent no beacon"));
+            gcs_send_text_P(SEVERITY_LOW, PSTR("<AGD>STM sent no beacon<AGD>"));
         }
 		return false;
 	}
@@ -146,7 +156,7 @@ bool Copter::agd_get_nav_info() {
 
 void Copter::agd_calc_throttle(int16_t &throttle_val) {
 	throttle_val = channel_throttle->get_control_mid();
-	switch (agd_throttle_con) {
+	/*switch (agd_throttle_con) {
 	case startup:
 		break;
 	case posHigh:
@@ -193,7 +203,7 @@ void Copter::agd_calc_throttle(int16_t &throttle_val) {
     }
     char temp[8];
     itoa(throttle_val, temp, 10);
-    gcs_send_text_P(SEVERITY_LOW, PSTR(temp));
+    gcs_send_text_P(SEVERITY_LOW, PSTR(temp));*/
 }
 
 // based on the desired direction and magnitude of roll and pitch from navigation board, set the target roll and pitch angle to predefined values.
@@ -209,38 +219,38 @@ void Copter::agd_calc_desired_lean_angles(float &roll_out, float &pitch_out)
 	case startup:
 		break;
 	case posHigh:
-        roll_val = channel_roll->get_control_mid() + AGD_ROLL_POS_HIGH;
+        roll_val = channel_roll->get_control_mid() + 500;
 		if (agd_roll_con_prev != agd_roll_con) {
 			agd_roll_con_prev = agd_roll_con;
-			gcs_send_text_P(SEVERITY_LOW, PSTR("RL_POS_HIGH"));
+			gcs_send_text_P(SEVERITY_LOW, PSTR("<AGD>RL_POS_HIGH<AGD>"));
 		}
 		break;
 	case negHigh:
-        roll_val = channel_roll->get_control_mid() + AGD_ROLL_NEG_HIGH;
+        roll_val = channel_roll->get_control_mid() - 500;
 		if (agd_roll_con_prev != agd_roll_con) {
 			agd_roll_con_prev = agd_roll_con;
-			gcs_send_text_P(SEVERITY_LOW, PSTR("RL_NEG_HIGH"));
+			gcs_send_text_P(SEVERITY_LOW, PSTR("<AGD>RL_NEG_HIGH<AGD>"));
 		}
 		break;
 	case posLow:
-        roll_val = channel_roll->get_control_mid() + AGD_ROLL_POS_LOW;
+        roll_val = channel_roll->get_control_mid() + 300;
 		if (agd_roll_con_prev != agd_roll_con) {
 			agd_roll_con_prev = agd_roll_con;
-			gcs_send_text_P(SEVERITY_LOW, PSTR("RL_POS_LOW"));
+			gcs_send_text_P(SEVERITY_LOW, PSTR("<AGD>RL_POS_LOW<AGD>"));
 		}
 		break;
 	case negLow:
-        roll_val = channel_roll->get_control_mid() + AGD_ROLL_NEG_LOW;
+        roll_val = channel_roll->get_control_mid() - 300;
 		if (agd_roll_con_prev != agd_roll_con) {
 			agd_roll_con_prev = agd_roll_con;
-			gcs_send_text_P(SEVERITY_LOW, PSTR("RL_NEG_LOW"));
+			gcs_send_text_P(SEVERITY_LOW, PSTR("<AGD>RL_NEG_LOW<AGD>"));
 		}
 		break;
 	case idle:
 		roll_val = channel_roll->get_control_mid();
 		if (agd_roll_con_prev != agd_roll_con) {
 			agd_roll_con_prev = agd_roll_con;
-			gcs_send_text_P(SEVERITY_LOW, PSTR("RL_idle"));
+			gcs_send_text_P(SEVERITY_LOW, PSTR("<AGD>RL_idle<AGD>"));
 		}
 		break;
 	}
@@ -249,38 +259,38 @@ void Copter::agd_calc_desired_lean_angles(float &roll_out, float &pitch_out)
 	case startup:
 		break;
 	case posHigh:
-        pitch_val = channel_pitch->get_control_mid() + AGD_PITCH_POS_HIGH;
+        pitch_val = channel_pitch->get_control_mid() + 500;
 		if (agd_pitch_con_prev != agd_pitch_con) {
 			agd_pitch_con_prev = agd_pitch_con;
-			gcs_send_text_P(SEVERITY_LOW, PSTR("PT_POS_HIGH"));
+			gcs_send_text_P(SEVERITY_LOW, PSTR("<AGD>PT_POS_HIGH<AGD>"));
 		}
 		break;
 	case negHigh:
-        pitch_val = channel_pitch->get_control_mid() + AGD_PITCH_NEG_HIGH;
+        pitch_val = channel_pitch->get_control_mid() - 500;
 		if (agd_pitch_con_prev != agd_pitch_con) {
 			agd_pitch_con_prev = agd_pitch_con;
-			gcs_send_text_P(SEVERITY_LOW, PSTR("PT_NEG_HIGH"));
+			gcs_send_text_P(SEVERITY_LOW, PSTR("<AGD>PT_NEG_HIGH<AGD>"));
 		}
 		break;
 	case posLow:
-        pitch_val = channel_pitch->get_control_mid() + AGD_PITCH_POS_LOW;
+        pitch_val = channel_pitch->get_control_mid() + 300;
 		if (agd_pitch_con_prev != agd_pitch_con) {
 			agd_pitch_con_prev = agd_pitch_con;
-			gcs_send_text_P(SEVERITY_LOW, PSTR("PT_POS_LOW"));
+			gcs_send_text_P(SEVERITY_LOW, PSTR("<AGD>PT_POS_LOW<AGD>"));
 		}
 		break;
 	case negLow:
-        pitch_val = channel_pitch->get_control_mid() + AGD_PITCH_NEG_LOW;
+        pitch_val = channel_pitch->get_control_mid() - 300;
 		if (agd_pitch_con_prev != agd_pitch_con) {
 			agd_pitch_con_prev = agd_pitch_con;
-			gcs_send_text_P(SEVERITY_LOW, PSTR("PT_NEG_LOW"));
+			gcs_send_text_P(SEVERITY_LOW, PSTR("<AGD>PT_NEG_LOW<AGD>"));
 		}
 		break;
 	case idle:
 		pitch_val = channel_pitch->get_control_mid();
 		if (agd_pitch_con_prev != agd_pitch_con) {
 			agd_pitch_con_prev = agd_pitch_con;
-			gcs_send_text_P(SEVERITY_LOW, PSTR("PT_idle"));
+			gcs_send_text_P(SEVERITY_LOW, PSTR("<AGD>PT_idle<AGD>"));
 		}
 		break;
 	}
@@ -362,7 +372,6 @@ void Copter::agd_search_beacon_run()
 
 void Copter::agd_nav_input_run()
 {
-    AltHoldModeState althold_state;
     float takeoff_climb_rate = 0.0f;
     int16_t throttle_control;
 
@@ -372,39 +381,46 @@ void Copter::agd_nav_input_run()
     // get pilot desired lean angles
     float target_roll, target_pitch;
     agd_calc_desired_lean_angles(target_roll, target_pitch);
-  
+
     // get pilot's desired yaw rate
     float target_yaw_rate = agd_yaw_con;
-
+    //bool takeoff_triggered = channel_throttle->control_in > get_takeoff_trigger_throttle();
+    bool takeoff_triggered = channel_throttle->control_in > 0.1*channel_throttle->get_control_mid();
+    if (takeoff_triggered && agd_althold_prev_state == AltHold_Landed) {
+        gcs_send_text_P(SEVERITY_MEDIUM, PSTR("<AGD>takeoff triggered<AGD>"));
+    }
     // get pilot desired climb rate
     agd_calc_throttle(throttle_control);
+    //float target_climb_rate = get_pilot_desired_climb_rate(channel_throttle->control_in);
+
     float target_climb_rate = get_pilot_desired_climb_rate(throttle_control);
+    
     target_climb_rate = constrain_float(target_climb_rate, -g.pilot_velocity_z_max, g.pilot_velocity_z_max);
-
-    bool takeoff_triggered = (ap.land_complete && (throttle_control > get_takeoff_trigger_throttle()));
-
-    // Alt Hold State Machine Determination
-    if (!ap.auto_armed || !motors.get_interlock()) {
-        althold_state = AltHold_Disarmed;
-    }
-    else if (takeoff_state.running || takeoff_triggered){
-        althold_state = AltHold_Takeoff;
-    }
-    else if (ap.land_complete){
-        althold_state = AltHold_Landed;
+    if (((agd_althold_prev_state == AltHold_Landed) && takeoff_triggered) || (takeoff_state.running && (agd_althold_prev_state == AltHold_Takeoff))) {
+        agd_althold_state = AltHold_Takeoff;
+        agd_althold_prev_state = AltHold_Takeoff;
     }
     else {
-        althold_state = AltHold_Flying;
+        if (agd_althold_prev_state == AltHold_Takeoff || agd_althold_prev_state == AltHold_Flying) {
+            agd_althold_state = AltHold_Flying;
+            if (agd_althold_prev_state != agd_althold_state) {
+                gcs_send_text_P(SEVERITY_MEDIUM, PSTR("<AGD>takeoff done. flying<AGD>"));
+                agd_althold_prev_state = agd_althold_state;
+            }
+        }
+        else {
+            agd_althold_prev_state = AltHold_Landed;
+        }
     }
 
     // Alt Hold State Machine
-    switch (althold_state) {
+    switch (agd_althold_state) {
 
     case AltHold_Disarmed:
         break;
 
     case AltHold_Takeoff:
-
+        gcs_send_text_P(SEVERITY_MEDIUM, PSTR("<AGD>takeoff run<AGD>"));
         // initiate take-off
         if (!takeoff_state.running) {
             takeoff_timer_start(constrain_float(g.pilot_takeoff_alt, 0.0f, 1000.0f));
@@ -424,27 +440,40 @@ void Copter::agd_nav_input_run()
         pos_control.set_alt_target_from_climb_rate(target_climb_rate, G_Dt, false);
         pos_control.add_takeoff_climb_rate(takeoff_climb_rate, G_Dt);
         pos_control.update_z_controller();
+        //agd_althold_state = AltHold_Flying;
         break;
 
     case AltHold_Landed:
+        //gcs_send_text_P(SEVERITY_MEDIUM, PSTR("<AGD>land<AGD>"));
+        attitude_control.set_throttle_out_unstabilized(get_throttle_pre_takeoff(channel_throttle->control_in), true, g.throttle_filt);
+        pos_control.relax_alt_hold_controllers(get_throttle_pre_takeoff(channel_throttle->control_in) - throttle_average);
         break;
 
     case AltHold_Flying:
+        //gcs_send_text_P(SEVERITY_MEDIUM, PSTR("<AGD>flying<AGD>"));
         // call attitude controller
         attitude_control.angle_ef_roll_pitch_rate_ef_yaw_smooth(target_roll, target_pitch, target_yaw_rate, get_smoothing_gain());
 
         // call throttle controller
-        if (sonar_enabled && (sonar_alt_health >= SONAR_ALT_HEALTH_MAX)) {
-            // if sonar is ok, use surface tracking
-            target_climb_rate = get_surface_tracking_climb_rate(target_climb_rate, pos_control.get_alt_target(), G_Dt);
-        }
+        target_climb_rate = get_agd_climb_rate(target_climb_rate, AGD_TARGET_ALTITUDE, G_Dt);
 
         // call position controller
         pos_control.set_alt_target_from_climb_rate(target_climb_rate, G_Dt, false);
         pos_control.update_z_controller();
         break;
     }
-
+    /*char temp[32] = "<AGD>";
+    char temp1[4];
+    char temp2[4];
+    itoa(target_climb_rate, temp1, 10);
+    itoa(channel_throttle->control_in, temp2, 10);
+    strcat(temp, temp1);
+    strcat(temp,",  user_in ");
+    strcat(temp, temp2);
+    strcat(temp, "<AGD>");*/
+    //if (agd_pixarm_counter % 6 == 0){
+    //   gcs_send_text_P(SEVERITY_LOW, PSTR(temp));
+    //}
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/*float target_roll, target_pitch;
 	int16_t throttle_control;
@@ -512,3 +541,17 @@ void Copter::agd_user_input_run()
     agd_prev_throttle = channel_yaw->control_in;
 }
 
+float Copter::get_agd_climb_rate(int16_t target_rate, float current_alt_target, float dt)
+{
+    float distance_error;
+    float velocity_correction;
+    float current_alt = alti;
+
+    // calc desired velocity correction from target sonar alt vs actual sonar alt (remove the error already passed to Altitude controller to avoid oscillations)
+    distance_error = current_alt_target - current_alt;
+    velocity_correction = distance_error * g.sonar_gain;
+    velocity_correction = constrain_float(velocity_correction, -THR_SURFACE_TRACKING_VELZ_MAX, THR_SURFACE_TRACKING_VELZ_MAX);
+
+    // return combined pilot climb rate + rate to correct sonar alt error
+    return (target_rate + velocity_correction);
+}

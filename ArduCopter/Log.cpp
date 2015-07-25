@@ -633,7 +633,7 @@ void Copter::Log_Write_ARMPixT() {
         LOG_PACKET_HEADER_INIT(LOG_PIXARM_MSG),
         xVal    : x_inten,
         yVal    : y_inten,
-        zVal    : z_inten,
+        zVal    : alti,
         rVal    : rotation_abs
     };
     DataFlash.WriteBlock(&pkt, sizeof(pkt));

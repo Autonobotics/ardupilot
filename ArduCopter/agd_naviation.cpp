@@ -13,10 +13,10 @@ void Copter::agd_nav_init()
 	//agd_started = false;
 	x_inten = idle;
 	y_inten = idle;
-	z_inten = idle;
-	rotation_abs = 0x7ffe;
+    alti = 80;
+	rotation_abs = 0;
 	if (AGD_NAV_PORT->is_initialized()) {
-		gcs_send_text_P(SEVERITY_LOW, PSTR("UART init success"));
+		gcs_send_text_P(SEVERITY_LOW, PSTR("<AGD>UART init successful<AGD>"));
 	}
 
 	int16_t incoming[PIXARM_MSG_SIZE];
@@ -59,6 +59,7 @@ void Copter::agd_nav_init()
 }*/
 
 void Copter::nav_sync() {
+    gcs_send_text_P(SEVERITY_LOW, PSTR("<AGD>PIXARM_start_SYNC<AGD>"));
 	sAPP_PIXARM_SYNC sync_msg;
 	sync_msg.cmd = PIXARM_CMD_SYNC;
 	sync_msg.flag = PIXARM_FLAG_END;
@@ -67,11 +68,11 @@ void Copter::nav_sync() {
 	//itoa(*txbuf, temp, 16);
 	//gcs_send_text_P(SEVERITY_LOW, PSTR(temp));
 	int16_t size = AGD_NAV_PORT->write(txbuf, PIXARM_MSG_SIZE);
-	gcs_send_text_P(SEVERITY_LOW, PSTR("PIXARM_start_SYNC"));
+	//gcs_send_text_P(SEVERITY_LOW, PSTR("<AGD>PIXARM_start_SYNC<AGD>"));
 	//itoa(size, temp, 16);
 	//gcs_send_text_P(SEVERITY_LOW, PSTR(temp));
 	if (size != PIXARM_MSG_SIZE) {
-		gcs_send_text_P(SEVERITY_LOW, PSTR("PIXARM_ERROR_SYNC"));
+		gcs_send_text_P(SEVERITY_LOW, PSTR("<AGD>PIXARM_ERROR_SYNC<AGD>"));
 		//Log_Write_ARMPixT_error(PIXARM_ERROR_SYNC);
 		agd_nav_state = sync;
 	}
@@ -84,7 +85,7 @@ void Copter::nav_ack() {
 	int16_t incoming[PIXARM_MSG_SIZE];
 	sAPP_PIXARM_SYNC* ack_msg;
 	int16_t size;
-	char temp[PIXARM_MSG_SIZE];
+	//char temp[PIXARM_MSG_SIZE];
 
 	size = AGD_NAV_PORT->available();   // Number of bytes available in rx buffer
 
@@ -112,7 +113,7 @@ void Copter::nav_ack() {
 		}
 		ack_msg = (sAPP_PIXARM_SYNC*) incoming;
 		if (ack_msg->cmd != PIXARM_CMD_SYNC) {
-			gcs_send_text_P(SEVERITY_LOW, PSTR("PIXARM_ERROR_ACK"));
+			gcs_send_text_P(SEVERITY_LOW, PSTR("<AGD>PIXARM_ERROR_ACK<AGD>"));
 			//Log_Write_ARMPixT_error(PIXARM_ERROR_ACK);
 			agd_nav_state = sync;
 		}
@@ -132,7 +133,7 @@ void Copter::nav_req() {
 
 	int16_t size = AGD_NAV_PORT->write(txbuf, PIXARM_MSG_SIZE);
 	if (size != PIXARM_MSG_SIZE) {
-		gcs_send_text_P(SEVERITY_LOW, PSTR("PIXARM_ERROR_REQ"));
+		gcs_send_text_P(SEVERITY_LOW, PSTR("<AGD>PIXARM_ERROR_REQ<AGD>"));
 		//Log_Write_ARMPixT_error(PIXARM_ERROR_REQ);
 		agd_nav_state = request;
 	}
@@ -157,18 +158,18 @@ void Copter::nav_read() {
 		}
 		data = (sAPP_PIXARM_READ_DATA*) incoming;
 		if (data->cmd != PIXARM_CMD_READ_DATA) {
-			gcs_send_text_P(SEVERITY_LOW, PSTR("PIXARM_ERROR_READ"));
+			gcs_send_text_P(SEVERITY_LOW, PSTR("<AGD>PIXARM_ERROR_READ<AGD>"));
 			//Log_Write_ARMPixT_error(PIXARM_ERROR_READ);
 			agd_nav_state = read_data;
 		}
 		else {
 			agd_nav_state = request;
-            if ((x_inten != data->x_intensity) || (y_inten != data->y_intensity) || (z_inten != data->z_intensity) || (rotation_abs != data->rotation_absolute)) {
-                gcs_send_text_P(SEVERITY_LOW, PSTR("PIXARM_READ_SUCCESS"));
-            }
+            //if ((x_inten != data->x_intensity) || (y_inten != data->y_intensity) || (alti != data->z_target) || (rotation_abs != data->rotation_absolute)) {
+             //   gcs_send_text_P(SEVERITY_LOW, PSTR("<AGD>PIXARM_READ_SUCCESS<AGD>"));
+            //}
 			x_inten = data->x_intensity;
 			y_inten = data->y_intensity;
-			z_inten = data->z_intensity;
+            alti = data->z_target;
 			rotation_abs = data->rotation_absolute;
 			//Log_Write_ARMPixT();
 
@@ -179,6 +180,7 @@ void Copter::nav_read() {
 
 void Copter::run_nav()
 {
+    //gcs_send_text_P(SEVERITY_LOW, PSTR("<AGD>UART run nav<AGD>"));
 	switch (agd_nav_state) {
 	case sync:
 		nav_sync();
