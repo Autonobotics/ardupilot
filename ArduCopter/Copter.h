@@ -320,26 +320,26 @@ private:
     // Auto
     AutoMode auto_mode;   // controls which auto controller is run
 
-	//Agd
+	//Agd State machine variables
 	AgdMode agd_mode;
 	AgdMode agd_prev_mode;
 	AgdControl  agd_pitch_con, agd_roll_con, agd_throttle_con;
 	AgdControl  agd_pitch_con_prev, agd_roll_con_prev, agd_throttle_con_prev;
     AltHoldModeState agd_althold_state;
     AltHoldModeState agd_althold_prev_state;
+    Pixarm_state agd_nav_state;
 
+    //AGD Control variables
 	int16_t agd_yaw_con;
 	float agd_prev_roll, agd_prev_pitch;
 	float agd_prev_yaw_rate;
 	int16_t agd_prev_throttle;
-	//volatile bool agd_started = false;
 	bool agd_change_mode;
 	volatile AgdControl x_inten;
 	volatile AgdControl y_inten;
 	volatile uint8_t alti;
 	volatile int16_t rotation_abs;
 	uint16_t agd_pixarm_counter;
-	ARMPixT_state agd_nav_state;
 
     // Guided
     GuidedMode guided_mode;  // controls which controller is run (pos or vel)
@@ -627,8 +627,8 @@ private:
     void Log_Write_Parameter_Tuning(uint8_t param, float tuning_val, int16_t control_in, int16_t tune_low, int16_t tune_high);
     void Log_Write_Home_And_Origin();
     void Log_Sensor_Health();
-    void Log_Write_ARMPixT();
-    void Log_Write_ARMPixT_error(uint8_t error);
+    void Log_Write_PixArm();
+    void Log_Write_PixArm_error(uint8_t error);
 #if FRAME_CONFIG == HELI_FRAME
     void Log_Write_Heli(void);
 #endif
@@ -642,8 +642,7 @@ private:
     void userhook_SlowLoop();
     void userhook_SuperSlowLoop();
 
-	// AGD navigation ARMPixT functions
-	void agd_FastLoop();
+	// AGD navigation Pixarm Protocol functions
 	void agd_nav_init();
 	void nav_sync();
 	void nav_ack();
@@ -936,7 +935,7 @@ private:
     bool start_command(const AP_Mission::Mission_Command& cmd);
     bool verify_command(const AP_Mission::Mission_Command& cmd);
 
-	//agd
+	//AGD Control Functions
     void agd_init_param();
 	bool agd_init(bool ignore_checks);
 	bool agd_check_input();

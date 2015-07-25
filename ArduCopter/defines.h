@@ -85,7 +85,7 @@ enum aux_sw_func {
 #define HIL_MODE_SENSORS                1
 
 // Auto Pilot Modes enumeration
-// AGD replaces 
+// AGD replaces ACRO in Mission Planner
 enum autopilot_modes {
     STABILIZE =     0,  // manual airframe angle with manual throttle
     AGD =           1,  // autonomously guide people using beacons (Autonomous Guide Drone) replace acro mode
@@ -177,6 +177,8 @@ enum tuning_func {
 #define AGD_PITCH_POS_LOW	300
 #define AGD_PITCH_NEG_HIGH	-500
 #define AGD_PITCH_NEG_LOW	-300
+
+// AGD Throttle control
 #define AGD_THROTTLE_POS_HIGH	5
 #define AGD_THROTTLE_POS_LOW	2
 #define AGD_THROTTLE_NEG_HIGH	-5
@@ -222,10 +224,11 @@ enum AgdControl {
 	posLow,
 	negLow,
 	idle,
-	startup
+    startup
 };
 
-
+///////////////////////////////////////////////////////////////////////////////////////////////
+// Pixarm communicaiton
 #define AGD_NAV_PORT hal.uartD
 #define AGD_AUTO_MODE_THRESHOLD 500
 #define PIXARM_CMD_READ_REQ 0x03
@@ -238,14 +241,14 @@ enum AgdControl {
 #define PIXARM_ERROR_REQ 3
 #define PIXARM_ERROR_READ 4
 
-enum ARMPixT_state {
+enum Pixarm_state {
 	sync = 0,
 	ack = 1,
 	request = 2,
 	read_data = 3
 };
 
-#define LOG_ARMPixT_MSG 0xF0
+#define LOG_PixArm_MSG 0xF0
 
 typedef struct _sAPP_PIXARM_READ_DATA
 {
@@ -280,7 +283,7 @@ typedef struct _sAPP_PIXARM_SYNC
 	uint8_t flag;
 
 } sAPP_PIXARM_SYNC;
-
+///////////////////////////////////////////////////////////////////////////////////////////////
 
 // RTL states
 enum RTLState {

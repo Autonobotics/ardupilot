@@ -151,20 +151,6 @@ const AP_Scheduler::Task Copter::scheduler_tasks[] PROGMEM = {
 #endif
 };
 
-/*void Copter::agd_FastLoop()
-{
-	if (agd_started == true)
-	{
-		run_nav();
-	}
-	else {
-		delay(10);
-	}
-	//gcs_send_text_P(SEVERITY_LOW, PSTR("PIXARM_POLL_NAV_100HZ"));
-
-}*/
-
-
 void Copter::setup() 
 {
     cliSerial = hal.console;
